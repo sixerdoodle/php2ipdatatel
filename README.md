@@ -14,3 +14,20 @@ None of this is supported / documented by either myself or ipdatatel or alarmdea
 it appears to generally work, may have unintended side effects.  
 !! Use at your own risk !!
 *************************************************************************************
+
+Typical usage might look like this:
+
+	$client = Alarm_Login();
+	if($client->isConnected() == true) {
+		if(Alarm_DisableZone($client)){
+			if(Alarm_Arm($client)) {
+					IFTTT_say("Alarm is armed");
+			} else {
+				error_log(basename(__FILE__)."[".__LINE__."]\t failed to arm alarm");
+			}
+		} else {
+			error_log(basename(__FILE__)."[".__LINE__."]\t failed disable zones");
+		}
+	} else {
+		error_log(basename(__FILE__)."[".__LINE__."]\t failed to connect to alarm");
+	}
