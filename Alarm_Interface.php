@@ -291,7 +291,7 @@ function Alarm_DisableZone($soc) {
 			$response = json_decode($soc->receive()); 
 		}
 
-		if(Alarm_WaitForLCD($soc,"Press (*) for Zone Bypass|Enter Your Access Code",5)) {
+		if(Alarm_WaitForLCD($soc,"Enter Your Access Code",5)) {  //wait long enough here....
 			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t system successfully disabled zones",0);
 			$data = true;
 		} else {
