@@ -16,8 +16,8 @@
 //		returns false if the arm fails and true if it succeeds
 //  Alarm_Disarm($client) - embedded key code, effectively same as Arm except looking for different start/stop conditions
 //		returns false on fail and true on success
-//  Alarm_DisableZone($client) - enters the keycode *9 to disable all zone delay, good for going to bed at night
-//		use before Alarm_Arm to disable the zones, returns true/false
+//  Alarm_NoEntryDelay($client) - enters the keycode *9 to disable all alarm delay, good for going to bed at night
+//		use before Alarm_Arm to turn off entry delay, returns true/false
 //  Alarm_ArmAway($client) - keycode a to "arm in away mode", returns true/false
 //  Alarm_ArmStay($client) - keycode s to "arm in stay mode", returns true/false
 //  Alarm_WaitForLCD($client, $str, $cnt) - loops every 1 sec looking for $str to show up on the alarm LCD
@@ -269,16 +269,16 @@ function Alarm_Disarm($soc) {
 	return $data;
 }
 //
-// Press Disable zone code
+// Arming Without Entry Delay
 //
-function Alarm_DisableZone($soc) {
+function Alarm_NoEntryDelay($soc) {
 	global $dbg;
 	global $AlarmKeyDelay;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Alarm Disable Zone",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t NoEntryDelay",0);
 	
 	$data = false;
 	if(!Alarm_WaitForLCD($soc,"System is Ready to Arm",5)) {
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t Alarm not ready to disable",0);  // must be ready to arm to do this
+		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t Alarm not ready for NoEntryDelay",0);  // must be ready to arm to do this
 	} else {
 		$keys = array(
 			"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"*\"}}",
@@ -292,15 +292,14 @@ function Alarm_DisableZone($soc) {
 		}
 
 		if(Alarm_WaitForLCD($soc,"Enter Your Access Code",5)) {  //wait long enough here....
-			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t system successfully disabled zones",0);
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t system successfully set NoEntryDelay",0);
 			$data = true;
 		} else {
-			error_log(basename(__FILE__)."[".__LINE__."]\t system failed to disable zones",0);
+			error_log(basename(__FILE__)."[".__LINE__."]\t system failed to set NoEntryDelay",0);
 		}
 	}
 	return $data;
 }
-
 //
 // arm the alarm in "Away" mode, that means with the 
 // countdown timer.  returns the status of the alarm
