@@ -33,16 +33,16 @@ require('C:/Program Files/PHP/v5.6/vendor/autoload.php');
 
 const BlankIsOK = true;
 const BlankNotOK = false;
-const AlarmKeyDelay = 500000;
+const AlarmKeyDelay = 500000;   // 1/2 a second
 
 use WebSocket\Client;
 
 // key-code to use to arm/disarm alarm
 $Alarm_keys = array(
-	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}",
-	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}",
-	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}",
-	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}");
+	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}",  <== your
+	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}",  <== 4 digit
+	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}",  <== code
+	"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"?\"}}"); <== here
 
 //
 // convert HTTP headers into associative array
@@ -91,8 +91,8 @@ function Alarm_Login() {
 	// do the login to get the encrypted password
 	$url = "https://www.alarmdealer.com/index.php?mod=auth&action=authenticate";
 	$data = array(
-		'user_name' => '?????????',
-		'user_pass' => '?????????',
+		'user_name' => '???????',  <== your username
+		'user_pass' => '???????',  <== and password to IPdatatel web site here
 		'return_mod' => '',
 		'return_action' => '',
 		'return_id' => ''
@@ -156,17 +156,8 @@ function Alarm_Login() {
 		error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t user_type:".var_export($user_type,true),0);
 	}
 
-//	$WSOpt = array(
-//		'timeout'=>30,
-//		'headers' => array(
-//		'connection' =>  'KeepAlive,Upgrade',
-//		'Keep-Alive' => 'timeout=60'
-//		)
-//	);
-
 	
 	$client = new Client("wss://alarmdealer.com:8800/ws",array('timeout'=>30));
-//		$client = new Client("wss://alarmdealer.com:8800/ws",$WSOpt);
 
 	$data = array(
 	  'action'	=> 'login',
@@ -191,7 +182,7 @@ function Alarm_Login() {
 
 
 	// select device
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t select device",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t select device",0);
 	$data = array(
 	  'action'	=> 'select_device',
 	  'input'   => array('device_id' => $device_id) );
@@ -200,13 +191,13 @@ function Alarm_Login() {
 	$client->send($jd);
 	$r = $client->receive();
 	if($r != "{\"msg\":\"Device is focused\",\"status\":\"OK\"}"){
-		error_log(basename(__FILE__)."[".__LINE__."]\t device selection failed",0);
+		error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t device selection failed",0);
 		return null;
 	}
 	//$response = json_decode($r);
 	//var_dump($response);
 	// should say {"msg":"Device is focused","status":"OK"}
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t device select done",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t device select done",0);
 	
 	//
 	// send an initial reset
@@ -220,13 +211,13 @@ function Alarm_Login() {
 //
 function Alarm_Ping($soc) {
 	global $dbg;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Ping Alarm",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Ping Alarm",0);
 	
 	$data = array(
 	  'action'	=> 'send_cmd',
 	  'input'   => array('cmd' => 'dping') );
 	$jd = json_encode( $data );
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t ".$jd,0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$jd,0);
 	$response = AlarmSend($soc,$jd,BlankIsOK); 
 
 	return $response;
@@ -238,22 +229,22 @@ function Alarm_Ping($soc) {
 function Alarm_Arm($soc) {
 	global $dbg;
 	global $Alarm_keys;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Alarm Arm",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm Arm",0);
 
 	$data = false;
 	if(!Alarm_WaitForLCD($soc,"Press (*) for Zone Bypass|System is Ready to Arm|Enter Your Access Code",5)) {
-		if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Alarm not ready to arm",0);
+		if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm not ready to arm",0);
 	} else {
 		foreach( $Alarm_keys as $key) {
-			if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t ".$key,0);
+			if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$key,0);
 			AlarmSend($soc,$key,BlankIsOK);
 		}
 		
 		if(Alarm_WaitForLCD($soc,"Exit Delay in Progress|System Armed in Away Mode|Armed With No Entry Delay",10)) {
-			if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t system successfully armed",0);
+			if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system successfully armed",0);
 			$data = true;
 		} else {
-			error_log(basename(__FILE__)."[".__LINE__."]\t system did not arm",0);
+			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system did not arm",0);
 		} 
 	}
 	return $data;
@@ -265,19 +256,19 @@ function Alarm_Arm($soc) {
 function Alarm_Disarm($soc) {
 	global $dbg;
 	global $Alarm_keys;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Disarm",0);
+	error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ",0);
 
 	$data = false;
-	if(!Alarm_WaitForLCD($soc,"Exit Delay in Progress|System Armed in Away Mode|Armed With No Entry Delay",5)) {
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t Alarm is not armed",0);
+	if(!Alarm_WaitForLCD($soc,"Exit Delay in Progress|System Armed in Away Mode|Armed With No Entry Delay",5,"Invalid Access Code")) {
+		error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm is not armed",0);
 	} else {
 		foreach( $Alarm_keys as $key) {
-			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t ".$key,0);
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$key,0);
 			AlarmSend($soc,$key,BlankIsOK);
 		}
 		
 		if(!Alarm_WaitForLCD($soc,"System is Ready to Arm|System Disarmed No Alarm Memory",10)) {
-			error_log(basename(__FILE__)."[".__LINE__."]\t failed to turn off alarm",0);
+			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t failed to turn off alarm",0);
 		} else {
 			$data = true;
 		}
@@ -289,26 +280,27 @@ function Alarm_Disarm($soc) {
 //
 function Alarm_NoEntryDelay($soc) {
 	global $dbg;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t NoEntryDelay",0);
+	error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ",0);
 	
 	$data = false;
 	if(!Alarm_WaitForLCD($soc,"System is Ready to Arm",5)) {
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t Alarm not ready for NoEntryDelay",0);  // must be ready to arm to do this
+		error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm not ready for NoEntryDelay",0);  // must be ready to arm to do this
 	} else {
 		$keys = array(
 			"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"*\"}}",
 			"{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"9\"}}");
 
 		foreach( $keys as $key) {
-			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t ".$key,0);
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$key,0);
 			AlarmSend($soc,$key,BlankIsOK);
 		}
 
-		if(Alarm_WaitForLCD($soc,"Enter Your Access Code|Press (*) for Zone Bypass",5)) {  //wait long enough here....
-			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t system successfully set NoEntryDelay",0);
+		//if(Alarm_WaitForLCD($soc,"Enter Your Access Code|Press (*) for Zone Bypass",5)) {  //wait long enough here....
+		if(Alarm_WaitForLCD($soc,"Enter Your Access Code",5)) {  //wait long enough here....
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system successfully set NoEntryDelay",0);
 			$data = true;
 		} else {
-			error_log(basename(__FILE__)."[".__LINE__."]\t system failed to set NoEntryDelay",0);
+			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]t system failed to set NoEntryDelay",0);
 		}
 	}
 	return $data;
@@ -319,12 +311,12 @@ function Alarm_NoEntryDelay($soc) {
 //
 function Alarm_Reset($soc) {
 	global $dbg;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Alarm_Reset",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm_Reset",0);
 	
 	$keys = array("{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"#\"}}");
 
 	foreach( $keys as $key) {
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t ".$key,0);
+		if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$key,0);
 		AlarmSend($soc,$key,BlankIsOK);
 	}
 
@@ -332,55 +324,53 @@ function Alarm_Reset($soc) {
 }
 
 //
-// arm the alarm in "Away" mode, that means with the 
-// countdown timer.  returns the status of the alarm
+// arm the alarm in "Away" mode, returns the status of the alarm
 // which should show "Exit Delay in Progress" if everything
 // worked as it should.
 //
 function Alarm_ArmAway($soc) {
 	global $dbg;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Arm in Away mode",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Arm in Away mode",0);
 	
 	$data = false;
 	if(!Alarm_WaitForLCD($soc,"System is Ready to Arm",5)) {
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t Alarm not ready to arm",0);
+		if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm not ready to arm",0);
 	} else {
 		$key = "{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"a\"}}";
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t ".$key,0);
+		if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$key,0);
 		AlarmSend($soc,$key,BlankIsOK); 
 		
 		if(Alarm_WaitForLCD($soc,"Exit Delay in Progress|System Armed in Away Mode|Armed With No Entry Delay",5)) {
-			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t system successfully armed",0);
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system successfully armed",0);
 			$data = true;
 		} else {
-			error_log(basename(__FILE__)."[".__LINE__."]\t system failed to arm",0);
+			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system failed to arm",0);
 		}
 	}
 	return $data;
 }
 
 //
-// arm the alarm in Stay mode.  this sets the 
-// alarm to trigger right away on a door open
+// arm the alarm in Stay mode.  
 //
 function Alarm_ArmStay($soc) {
 	global $dbg;
-	if($dbg) error_log(basename(__FILE__)."[".__LINE__."]\t Arm in Stay mode",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Arm in Stay mode",0);
 	
 	$data = false;
 	if(!Alarm_WaitForLCD($soc,"System is Ready to Arm",5)) {
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t Alarm not ready to arm",0);
+		if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t Alarm not ready to arm",0);
 	} else {
 	
 		$key = "{\"action\":\"send_cmd\",\"input\":{\"cmd\":\"s\"}}";
-		if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t ".$key,0);
+		if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t ".$key,0);
 		AlarmSend($soc,$key,BlankIsOK);
 		
 		if(Alarm_WaitForLCD($soc,"Exit Delay in Progress|System Armed in Away Mode|Armed With No Entry Delay",5)) {
-			if($dbg)error_log(basename(__FILE__)."[".__LINE__."]\t system successfully armed",0);
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system successfully armed",0);
 			$data = true;
 		} else {
-			error_log(basename(__FILE__)."[".__LINE__."]\t system did not arm",0);
+			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t system did not arm",0);
 		} 
 	}
 	return $data;
@@ -389,23 +379,28 @@ function Alarm_ArmStay($soc) {
 //
 // Wait for an LCD status to show up.  given string with | delimiter and number of attempts
 //
-function Alarm_WaitForLCD($soc,$str,$cnt) {
+function Alarm_WaitForLCD($soc,$str,$cnt,$FailStr = null) {
 	global $dbg;
 	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]",0);
 	$found = false;
+	$failed = false;
 	$ii = 0;
 	do {
 		$ii = $ii + 1;
 		if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t try ".$ii,0);
 		$data = AlarmLCD($soc);			// try to get the current LCD display
 		$found = strpos($str,$data);	// see if the current LCD string is in the returned display
+		if(($found !== false) and (!is_null($FailStr))){
+			$failed = strpos($FailStr,$data);
+			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t is ~".$data."~ in ~".$FailStr."~  ".StateValName('BooleanYes',$failed));
+		}
 		if($found === false){
 			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t is ~".$data."~ in ~".$str."~  NO");
-			usleep(AlarmKeyDelay);
+			//usleep(AlarmKeyDelay);
 		} else {
 			if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t is ~".$data."~ in ~".$str."~  YES");
 		}
-	} while ( ( $found === false ) and ( $ii < $cnt ));
+	} while ( ( $found === false ) and ( $ii < $cnt ) and ($failed !== true));
 	if( $found !== false ) $found = true;  // note $found !== false is actually a number, have to insert True if it's not false
 	return $found;
 }
@@ -454,7 +449,7 @@ function AlarmStatus( $soc ){
 // may retry on blank will retry on empty string
 function AlarmSend($soc,$data,$BlankOK) {
 	global $dbg;
-	//if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t",0);
+	if($dbg) error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t sending ".$data,0);
 
 	$success = false;
 	$ii = 0;
@@ -476,19 +471,24 @@ function AlarmSend($soc,$data,$BlankOK) {
 					$success = true;
 					$RetVal = $response;
 				} else {
-					if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t received blank response, try again ".$ii." ".var_export($response,true),0);
-					if($BlankOK)$success = true;
+					if($BlankOK){
+						$success = true;
+					} else {
+						if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t received blank response, try again ".$ii." ".var_export($response,true),0);
+					}
 				}
 			} else {
 				error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t received no object, try again ".$ii,0);
-				if($BlankOK)$success = true;
+				//if($BlankOK)$success = true;  Ii think we've got to have an object
 			}
 		} catch (Exception $e) {
-			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t error receiving try again ".$ii."\n". $e->getMessage(),0);
+			error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t error receiving, killing the connection\n". $e->getMessage(),0);
+			//$soc->close();
+			$ii = 99;	// no more tries, connection closed
 		}
-		//if(!$success) usleep(AlarmKeyDelay);
+		if(!$success) usleep(AlarmKeyDelay);
 	} while ((!$success) and ($ii < 5) );
-	//error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t".var_export($RetVal,true),0);
+	if($dbg)error_log(basename(__FILE__)."[".__LINE__."/".__FUNCTION__."]\t RetVal=".var_export($RetVal,true),0);
 	return $RetVal;
 }
 
